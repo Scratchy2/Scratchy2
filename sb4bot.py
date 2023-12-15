@@ -409,6 +409,37 @@ async def minesweeper(ctx: Context, *bombsanddimensions: str):
 
 	await ctx.reply("\n" + msg)
 
+polls = {}
+@bot.command(name="poll")
+async def poll(ctx: Context):
+	await ctx.reply("use create or vote as a subcommand")
+
+@poll.subcommand(name="create")
+async def create(ctx: Context, *nameandoptions: str):
+	x = " ".join(nameandoptions) + ","
+	choices = []
+	k = ""
+	initial = 0
+	for i in range(len(x)):
+		if x[i] == " ":
+			initial = i
+			poll = k
+			k = ""
+			break
+
+		k += x[i]
+	
+	for i in range(initial, len(x)):
+		if x[i] == ",":
+			choices.append(k)
+			k = ""
+			continue
+
+		if k == "" and x[i] == " ":
+			continue
+
+		k += x[i]
+
 @bot.command(name="shut")
 async def shut(ctx: Context, *secret: str):
 	try:
