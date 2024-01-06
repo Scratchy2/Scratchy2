@@ -1,5 +1,5 @@
 from MeowerBot import Bot
-from MeowerBot.context import Context
+from MeowerBot.context import Context, Post
 
 import logging, random, json as j, requests, time
 
@@ -32,11 +32,11 @@ async def login(t):
 
 @bot.command(name="ping")
 async def ping(ctx: Context):
-	await ctx.reply("Pong!\nMy latency is: " + str(bot.latency * 1000) + " ms")
+	await ctx.reply("Pong!\nMy latency is " + str(bot.latency * 1000) + " ms")
 
 @bot.command(name="rps")
 async def rps(ctx: Context):
-	await ctx.reply("Add r, p, or s to tell me your choice")
+	await ctx.reply("Add rock, paper, scissors to tell me your choice")
 
 @rps.subcommand(name="rock")
 async def rock(ctx: Context):
@@ -139,6 +139,13 @@ async def economy(ctx: Context):
 
 @economy.subcommand(name="work")
 async def add(ctx: Context):
+	with open("example.json", "r+") as f:
+		f.seek(0)
+		data = j.load(f)
+		if ctx.message.user.username in data["example"]:
+			await ctx.send_msg("sorry, but you can't use this command")
+			return "not allowed"
+	
 	with open("economy.json", "r+") as f:
 		f.seek(0)
 		data = j.load(f)
@@ -197,7 +204,7 @@ async def amount(ctx: Context):
 
 @economy.subcommand(name="shop")
 async def shop(ctx: Context):
-	await ctx.reply("You may buy the following things:\n\t\twater - $3\n\t\teggs - $5\n\t\tfrench toast - $10\n\t\tsoup - $20\n\t\tturkey dinner - $60\n\t\tNFT - $2,000\n\t\tadmin cmds - $50,000,000")
+	await ctx.reply("You may buy the following things:\n\t\twater - $3\n\t\teggs - $5\n\t\tfrench toast - $10\n\t\tsoup - $20\n\t\tturkey dinner - $60\n\t\tNFT - $2,000\n\t\tadmin cmds - $100,000")
 
 @shop.subcommand(name="inventory")
 async def inventory(ctx: Context):
@@ -215,7 +222,7 @@ items = {
 	"soup": 20,
 	"turkey dinner": 60,
 	"NFT": 2000,
-	"admin cmds": 50000000
+	"admin cmds": 100000
 }
 
 @shop.subcommand(name="buy")
@@ -269,9 +276,8 @@ async def sell(ctx: Context, *item: str):
 
 @bot.command(name="execute")
 async def execute(ctx: Context, *command: str):
-	print("AAAAAA: " + ctx.message.data[9:])
-	code = compile(ctx.message.data[9:], "test", "eval")
-	await eval(code)
+	code = ctx.message.data[9:]
+	await exec(code)
 
 @bot.command(name="msg")
 async def msg(ctx: Context, *message: str):
@@ -294,7 +300,14 @@ async def msg(ctx: Context, *message: str):
 			
 					k = ""
 
-			await bot.get_chat(chatid).send_msg(send)
+			if chatid == "this":
+				await bot.get_chat("ef25294f-139c-4674-9485-90ddaa0852fd").send_msg(send)
+			elif chatid == "h":
+				await bot.get_chat("home").send_msg(send)
+			elif chatid == "lc":
+				await bot.get_chat("livechat").send_msg(send)
+			else:	
+				await bot.get_chat(chatid).send_msg(send)
 		else:
 			await ctx.reply("sorry, this command is for admins only")
 
@@ -409,36 +422,21 @@ async def minesweeper(ctx: Context, *bombsanddimensions: str):
 
 	await ctx.reply("\n" + msg)
 
-polls = {}
-@bot.command(name="poll")
-async def poll(ctx: Context):
-	await ctx.reply("use create or vote as a subcommand")
-
-@poll.subcommand(name="create")
-async def create(ctx: Context, *nameandoptions: str):
-	x = " ".join(nameandoptions) + ","
-	choices = []
-	k = ""
-	initial = 0
-	for i in range(len(x)):
-		if x[i] == " ":
-			initial = i
-			poll = k
-			k = ""
-			break
-
-		k += x[i]
-	
-	for i in range(initial, len(x)):
-		if x[i] == ",":
-			choices.append(k)
-			k = ""
-			continue
-
-		if k == "" and x[i] == " ":
-			continue
-
-		k += x[i]
+# make a bot so if there is any message ending in ™️ it adds it to a database with your username
+# and if anyone says that word it tells you who trademarked that word
+#@bot.listen(Post)
+#async def onMessage(message: Post, *words):
+#	with open("trademarks.json", "r+") as f:
+#		if message.data.endswith("™️"):
+#			f.seek(0)
+#			x = j.load(f)
+#			x[message.data[:len(message.data) - 1]] = message.user.username
+#			f.seek(0)
+#			j.dump(x, f, indent=4)
+#			f.truncate()
+		
+#		for i in words:
+#			if 
 
 @bot.command(name="shut")
 async def shut(ctx: Context, *secret: str):
@@ -451,7 +449,7 @@ async def shut(ctx: Context, *secret: str):
 	with open("admins.json", "r+") as f:
 		f.seek(0)
 		x = j.load(f)
-		if ((usern in x["admins"]) or (" ".join(secret) == "preety plox wih soogar on topa")):
+		if ((usern in x["admins"]) or (" ".join(secret) == "private (not actual string)")):
 			await ctx.reply("fine")
 			exit()
 		else:
